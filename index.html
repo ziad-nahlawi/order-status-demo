@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Order Status Visualizer</title>
+
+<style>
+body {
+  font-family: system-ui, -apple-system, sans-serif;
+  background: #f2f2f2;
+  margin: 0;
+  padding: 20px;
+}
+
+h1 {
+  font-size: 20px;
+  margin-bottom: 20px;
+}
+
+.order-status {
+  padding: 12px;
+  border-radius: 6px;
+  color: white;
+  font-weight: 600;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.order-placed { background: #777; }
+.processing { background: #2563eb; }
+.finished { background: #16a34a; }
+.cancelled { background: #dc2626; }
+
+.item {
+  background: white;
+  padding: 16px;
+  border-radius: 6px;
+  margin-bottom: 12px;
+}
+
+.item-title {
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+button {
+  flex: 1;
+  padding: 8px;
+  border: 1px solid #ddd;
+  background: #f9f9f9;
+  border-radius: 4px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+button.active {
+  color: white;
+  border: none;
+}
+
+button.placed.active { background: #777; }
+button.processing.active { background: #2563eb; }
+button.shipped.active { background: #16a34a; }
+button.cancelled.active { background: #dc2626; }
+
+.footer {
+  margin-top: 20px;
+  display: flex;
+  gap: 10px;
+}
+
+.footer button {
+  flex: 1;
+}
+</style>
+</head>
+
+<body>
+
+<h1>Order</h1>
+<div id="orderStatus" class="order-status">Order: order-placed</div>
+<div id="items"></div>
+
+<div class="footer">
+  <button onclick="cancelOrder()">Cancel Order</button>
+  <button onclick="reset()">Reset</button>
+</div>
+
+<script>
+let items = [
+  { id: 1, status: "placed" },
+  { id: 2, status: "placed" },
+  { id: 3, status: "placed" }
+]
+
+const statuses = ["placed", "processing", "shipped", "cancelled"]
+
+function render() {
+  const container = document.getElementById("items")
+  container.innerHTML = ""
+
+  items.forEach(item => {
+    const div = document.createElement("div")
+    div.className = "item"
+
+    const title = document.createElement("div")
+    title.className = "item-title"
+    title.innerText = "Item #" + item.id
+    div.appendChild(title)
+
+    const btnContainer = document.createElement("div")
+    btnContainer.className = "buttons"
+
+    statuses.forEach(status => {
+      const btn = document.createElement("button")
+      btn.innerText = status
+      btn.classList.add(status)
+
+      if (item.status === status) {
+        btn.classList.add("active")
+      }
+
+      btn.onclick = () => {
+        item.status = status
+        render()
+      }
+
+      btnContainer.appendChild(btn)
+    })
+
+    div.appendChild(btnContainer)
+    container.appendChild(div)
+  })
+
+  updateOrderStatus()
+}
+
+function updateOrderStatus() {
+  const total = items.length
+  const shipped = items.filter(i => i.status === "shipped").length
+  const cancelled = items.filter(i => i.status === "cancelled").length
+  const processing = items.filter(i => i.status === "processing").length
+
+  let orderStatus = "order-placed"
+
+  if (cancelled === total) {
+    orderStatus = "cancelled"
+  }
+  else if (shipped + cancelled === total) {
+    orderStatus = shipped > 0 ? "finished" : "cancelled"
+  }
+  else if (processing > 0 || shipped > 0) {
+    orderStatus = "processing"
+  }
+
+  const orderDiv = document.getElementById("orderStatus")
+  orderDiv.className = "order-status " + orderStatus
+  orderDiv.innerText = "Order: " + orderStatus
+}
+
+function cancelOrder() {
+  items.forEach(i => i.status = "cancelled")
+  render()
+}
+
+function reset() {
+  items.forEach(i => i.status = "placed")
+  render()
+}
+
+render()
+</script>
+
+</body>
+</html>
